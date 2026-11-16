@@ -4,6 +4,7 @@ package br.edu.pos.apiprodutos.controller;
 import br.edu.pos.apiprodutos.model.Produto;
 import br.edu.pos.apiprodutos.service.ProdutoService;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.openapi.HttpMethod;
@@ -42,6 +43,11 @@ public class ProdutoController {
             ctx.json(new MensagemErro(erro.getMessage()));
         });
 
+
+        app.exception(JsonProcessingException.class, (erro, ctx) -> {
+            ctx.status(HttpStatus.BAD_REQUEST);
+            ctx.json(new MensagemErro("JSON inválido. Verifique os campos e seus tipos."));
+        });
 
         app.exception(IllegalArgumentException.class, (erro, ctx) -> {
             ctx.status(HttpStatus.BAD_REQUEST);
@@ -123,11 +129,12 @@ public class ProdutoController {
     )
     public void cadastrarProduto(Context ctx) {
 
-        Produto dados = ctx.bodyAsClass(Produto.class);
+        Produto dados = lerCorpo(ctx, Produto.class);
 
         Produto produto = service.cadastrar(
                 dados.getNome(),
-                dados.getPreco()
+                dados.getPreco(),
+                dados.getQuantidadeEstoque()
         );
 
         ctx.status(HttpStatus.CREATED);
@@ -168,7 +175,7 @@ public class ProdutoController {
 
         Long id = Long.parseLong(ctx.pathParam("id"));
 
-        Produto dados = ctx.bodyAsClass(Produto.class);
+        Produto dados = lerCorpo(ctx, Produto.class);
 
         Produto atualizado = service.atualizar(
                 id,
@@ -208,6 +215,16 @@ public class ProdutoController {
     }
 
     
+    private <T> T lerCorpo(Context ctx, Class<T> tipo) {
+        String corpo = ctx.body().trim();
+
+        if (corpo.isEmpty() || corpo.equals("null")) {
+            throw new IllegalArgumentException("Informe um objeto JSON no corpo da requisição.");
+        }
+
+        return ctx.bodyAsClass(tipo);
+    }
+
     public record MensagemErro(String mensagem) {
     }
 }

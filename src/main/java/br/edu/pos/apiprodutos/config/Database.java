@@ -40,6 +40,16 @@ public class Database {
 
             comando.execute(sql);
 
+            comando.execute("""
+                    ALTER TABLE produtos ADD COLUMN IF NOT EXISTS
+                    quantidade_estoque INTEGER DEFAULT 0 NOT NULL
+                    """);
+
+            comando.execute("""
+                    ALTER TABLE produtos ADD CONSTRAINT IF NOT EXISTS
+                    chk_estoque_nao_negativo CHECK (quantidade_estoque >= 0)
+                    """);
+
             System.out.println("Banco de dados inicializado!");
 
         } catch (SQLException erro) {

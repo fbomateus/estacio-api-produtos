@@ -16,10 +16,20 @@ public class ProdutoService {
     }
 
     public Produto cadastrar(String nome, double preco) {
+        return cadastrar(nome, preco, 0);
+    }
+
+    public Produto cadastrar(String nome, double preco, Integer quantidadeEstoque) {
 
         validarProduto(nome, preco);
 
-        Produto produto = new Produto(null, nome, preco);
+        if (quantidadeEstoque == null || quantidadeEstoque < 0) {
+            throw new IllegalArgumentException(
+                    "O estoque inicial deve ser um inteiro maior ou igual a zero."
+            );
+        }
+
+        Produto produto = new Produto(null, nome, preco, quantidadeEstoque);
 
         repository.salvar(produto);
 
@@ -66,6 +76,12 @@ public class ProdutoService {
         if (nome == null || nome.isBlank()) {
             throw new IllegalArgumentException(
                     "O nome do produto é obrigatório."
+            );
+        }
+
+        if (nome.length() > 150) {
+            throw new IllegalArgumentException(
+                    "O nome do produto deve ter no máximo 150 caracteres."
             );
         }
 
