@@ -5,6 +5,7 @@ public class Produto {
     private Long id;
     private String nome;
     private double preco;
+    private Integer quantidadeEstoque = 0;
 
     public Produto() {
     }
@@ -13,6 +14,19 @@ public class Produto {
         this.id = id;
         this.nome = nome;
         this.preco = preco;
+    }
+
+    public Produto(Long id, String nome, double preco, Integer quantidadeEstoque) {
+        this(id, nome, preco);
+        this.quantidadeEstoque = quantidadeEstoque;
+    }
+
+    public Integer getQuantidadeEstoque() {
+        return quantidadeEstoque;
+    }
+
+    public void setQuantidadeEstoque(Integer quantidadeEstoque) {
+        this.quantidadeEstoque = quantidadeEstoque;
     }
 
     public Long getId() {

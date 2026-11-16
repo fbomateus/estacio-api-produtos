@@ -7,7 +7,11 @@ import br.edu.pos.apiprodutos.repository.ProdutoRepository;
 import br.edu.pos.apiprodutos.repository.ProdutoRepositoryJDBC;
 import br.edu.pos.apiprodutos.service.ProdutoService;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.javalin.Javalin;
+import io.javalin.json.JavalinJackson;
 import io.javalin.openapi.plugin.OpenApiPlugin;
 import io.javalin.openapi.plugin.swagger.SwaggerPlugin;
 
@@ -43,6 +47,12 @@ public class Main {
 
 
         Javalin app = Javalin.create(config -> {
+
+            config.jsonMapper(new JavalinJackson(JsonMapper.builder()
+                    .disable(DeserializationFeature.ACCEPT_FLOAT_AS_INT)
+                    .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
+                    .disable(MapperFeature.ALLOW_COERCION_OF_SCALARS)
+                    .build(), false));
 
             config.registerPlugin(
                     new OpenApiPlugin(openApi -> {
