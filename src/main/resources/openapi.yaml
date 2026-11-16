@@ -11,6 +11,8 @@ servers:
 tags:
   - name: Produtos
     description: Operações de gerenciamento de produtos
+  - name: Estoque
+    description: Entradas, saídas e consulta de estoque baixo
 
 paths:
   /produtos:
@@ -72,6 +74,7 @@ paths:
     put:
       tags: [Produtos]
       summary: Atualizar um produto
+      description: Atualiza nome e preço. O estoque é preservado; utilize as rotas de movimentação para alterá-lo.
       requestBody:
         required: true
         content:
@@ -99,6 +102,89 @@ paths:
         '404':
           description: Produto não encontrado
 
+  /produtos/{id}/estoque/entrada:
+    post:
+      tags: [Estoque]
+      summary: Registrar entrada de estoque
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MovimentacaoEstoque'
+      responses:
+        '200':
+          description: Produto com estoque atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Produto'
+        '400':
+          description: Quantidade inválida ou limite de estoque excedido
+        '404':
+          description: Produto não encontrado
+
+  /produtos/{id}/estoque/saida:
+    post:
+      tags: [Estoque]
+      summary: Registrar saída de estoque
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MovimentacaoEstoque'
+      responses:
+        '200':
+          description: Produto com estoque atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Produto'
+        '400':
+          description: Quantidade inválida ou estoque insuficiente
+        '404':
+          description: Produto não encontrado
+
+  /produtos/estoque-baixo:
+    get:
+      tags: [Estoque]
+      summary: Listar produtos com estoque menor ou igual ao limite
+      parameters:
+        - name: limite
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+          example: 5
+      responses:
+        '200':
+          description: Lista de produtos com estoque baixo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Produto'
+        '400':
+          description: Limite inválido
+
 components:
   schemas:
     ProdutoEntrada:
@@ -114,6 +200,24 @@ components:
           type: number
           format: double
           example: 3500.00
+        quantidadeEstoque:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 2147483647
+          example: 10
+
+    MovimentacaoEstoque:
+      type: object
+      required:
+        - quantidade
+      properties:
+        quantidade:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 2147483647
+          example: 10
 
     Produto:
       type: object
@@ -129,3 +233,9 @@ components:
           type: number
           format: double
           example: 3500.00
+        quantidadeEstoque:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 2147483647
+          example: 10
