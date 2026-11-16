@@ -50,6 +50,7 @@ public class Main {
 
             config.jsonMapper(new JavalinJackson(JsonMapper.builder()
                     .disable(DeserializationFeature.ACCEPT_FLOAT_AS_INT)
+                    .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
                     .disable(MapperFeature.ALLOW_COERCION_OF_SCALARS)
                     .build(), false));
 
