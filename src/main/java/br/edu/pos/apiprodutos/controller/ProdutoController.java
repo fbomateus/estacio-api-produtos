@@ -2,6 +2,7 @@
 package br.edu.pos.apiprodutos.controller;
 
 import br.edu.pos.apiprodutos.model.Produto;
+import br.edu.pos.apiprodutos.model.MovimentacaoEstoque;
 import br.edu.pos.apiprodutos.service.ProdutoService;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -30,6 +31,8 @@ public class ProdutoController {
 
         app.get("/produtos", this::listarProdutos);
 
+        app.get("/produtos/estoque-baixo", this::listarEstoqueBaixo);
+
         app.get("/produtos/{id}", this::buscarProduto);
 
         app.post("/produtos", this::cadastrarProduto);
@@ -37,6 +40,10 @@ public class ProdutoController {
         app.put("/produtos/{id}", this::atualizarProduto);
 
         app.delete("/produtos/{id}", this::excluirProduto);
+
+        app.post("/produtos/{id}/estoque/entrada", this::registrarEntrada);
+
+        app.post("/produtos/{id}/estoque/saida", this::registrarSaida);
 
         app.exception(NoSuchElementException.class, (erro, ctx) -> {
             ctx.status(HttpStatus.NOT_FOUND);
@@ -215,6 +222,85 @@ public class ProdutoController {
     }
 
     
+    @OpenApi(
+            path = "/produtos/{id}/estoque/entrada",
+            methods = {HttpMethod.POST},
+            summary = "Registrar entrada de estoque",
+            tags = {"Estoque"},
+            pathParams = {
+                    @OpenApiParam(name = "id", type = Long.class, required = true)
+            },
+            requestBody = @OpenApiRequestBody(
+                    required = true,
+                    content = {@OpenApiContent(from = MovimentacaoEstoque.class)}
+            ),
+            responses = {
+                    @OpenApiResponse(status = "200", content = {@OpenApiContent(from = Produto.class)}),
+                    @OpenApiResponse(status = "400"),
+                    @OpenApiResponse(status = "404")
+            }
+    )
+    public void registrarEntrada(Context ctx) {
+
+        Long id = Long.parseLong(ctx.pathParam("id"));
+        MovimentacaoEstoque dados = lerCorpo(ctx, MovimentacaoEstoque.class);
+
+        ctx.json(service.registrarEntrada(id, dados.getQuantidade()));
+    }
+
+    @OpenApi(
+            path = "/produtos/{id}/estoque/saida",
+            methods = {HttpMethod.POST},
+            summary = "Registrar saída de estoque",
+            tags = {"Estoque"},
+            pathParams = {
+                    @OpenApiParam(name = "id", type = Long.class, required = true)
+            },
+            requestBody = @OpenApiRequestBody(
+                    required = true,
+                    content = {@OpenApiContent(from = MovimentacaoEstoque.class)}
+            ),
+            responses = {
+                    @OpenApiResponse(status = "200", content = {@OpenApiContent(from = Produto.class)}),
+                    @OpenApiResponse(status = "400"),
+                    @OpenApiResponse(status = "404")
+            }
+    )
+    public void registrarSaida(Context ctx) {
+
+        Long id = Long.parseLong(ctx.pathParam("id"));
+        MovimentacaoEstoque dados = lerCorpo(ctx, MovimentacaoEstoque.class);
+
+        ctx.json(service.registrarSaida(id, dados.getQuantidade()));
+    }
+
+    @OpenApi(
+            path = "/produtos/estoque-baixo",
+            methods = {HttpMethod.GET},
+            summary = "Listar produtos com estoque baixo",
+            tags = {"Estoque"},
+            queryParams = {
+                    @OpenApiParam(name = "limite", type = Integer.class, required = true,
+                            description = "Estoque menor ou igual ao limite informado", example = "5")
+            },
+            responses = {
+                    @OpenApiResponse(status = "200", content = {@OpenApiContent(from = Produto[].class)}),
+                    @OpenApiResponse(status = "400")
+            }
+    )
+    public void listarEstoqueBaixo(Context ctx) {
+
+        int limite;
+
+        try {
+            limite = Integer.parseInt(ctx.queryParam("limite"));
+        } catch (NumberFormatException erro) {
+            throw new IllegalArgumentException("Informe o limite como um inteiro maior ou igual a zero.");
+        }
+
+        ctx.json(service.listarEstoqueBaixo(limite));
+    }
+
     private <T> T lerCorpo(Context ctx, Class<T> tipo) {
         String corpo = ctx.body().trim();
 
